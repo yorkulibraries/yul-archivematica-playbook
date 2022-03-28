@@ -1,0 +1,24 @@
+---
+
+- name: bootstrap
+  hosts: all
+  become: yes
+  gather_facts: false
+
+  tasks:
+    # python isn't installed by default on ubuntu so we need
+    # to do that with the raw command before
+    - name: install python
+      raw: test -e /usr/bin/python || (apt-get update; apt-get install -y python-is-python3;)
+      register: output
+      changed_when:
+        - output.stdout|length > 0
+        - output.stdout != "\r\n"
+      when: islandora_distro|default('') is match("ubuntu/")
+
+    # install some packages we would like on every server
+    - name: install extra packages ubuntu
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ archivematica_extra_ubuntu_packages }}"

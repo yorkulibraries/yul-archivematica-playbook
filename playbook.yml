@@ -1,0 +1,7 @@
+
+---
+
+- import_playbook: bootstrap.yml
+  tags:
+    - bootstrap
+- import_playbook: singlenode.yml
