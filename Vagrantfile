@@ -6,19 +6,17 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
-  config.vm.box = ENV.fetch("VAGRANT_BOX", "ubuntu/bionic64")
+  config.vm.box = ENV.fetch("VAGRANT_BOX", "ubuntu/jammy64")
 
   {
     "am-local" => {
-      "ip" => "192.168.168.198",
       "memory" => "4096",
-      "cpus" => "2",
+      "cpus" => "8",
     },
   }.each do |short_name, properties|
 
     # Define guest
     config.vm.define short_name do |host|
-      host.vm.network "private_network", ip: properties.fetch("ip")
       host.vm.hostname = "#{short_name}.myapp.dev"
     end
 
@@ -30,20 +28,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   end
 
-  # Make the project root available to the guest VM
-  config.vm.synced_folder '.', '/vagrant', mount_options: ["uid=333", "gid=333"]
-
-  # Ansible provisioning
-  config.vm.provision "shell", inline: "sudo apt-get update -y &&  apt-get install -y python"
+  config.vm.network :forwarded_port, guest: 8000, host: 8000
+  config.vm.network :forwarded_port, guest: 80, host: 8001
 
   config.vm.provision :ansible do |ansible|
-    ansible.playbook = "./singlenode.yml"
-    ansible.host_key_checking = false
-    ansible.extra_vars = {
-      "archivematica_src_dir" => "/vagrant/src/",
-      "archivematica_src_environment_type" => "development",
-    }
-    # Accept multiple arguments, separated by colons
-    ansible.raw_arguments = ENV['ANSIBLE_ARGS'].to_s.split(':')
+    ansible.compatibility_mode = "auto"
+    ansible.playbook = "playbook.yml"
+    ansible.galaxy_role_file = "requirements.yml"
+    ansible.galaxy_command = "ansible-galaxy install --role-file=%{role_file}"
+    ansible.limit = "all"
+    ansible.raw_arguments = "--ask-vault-pass"
+    ansible.inventory_path = "inventory/dev"
   end
 end
