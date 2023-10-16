@@ -1,0 +1,14 @@
+---
+
+archivematica_extra_ubuntu_packages:
+  - wget
+  - curl
+  - htop
+  - tree
+  - zsh
+  - fish
+  - unzip
+  - build-essential
+  - vim
+  - multitail
+  - silversearcher-ag
