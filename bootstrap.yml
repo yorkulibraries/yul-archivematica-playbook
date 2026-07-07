@@ -5,7 +5,17 @@
   become: yes
   gather_facts: false
 
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
   tasks:
+    - name: Ensure Python is installed
+      raw: "test -e /usr/bin/python || (apt update; apt install -y python3;)"
+      register: output
+      changed_when:
+        - output.stdout != ""
+        - output.stdout != "\r\n"
+
     - name: Update apt cache
       apt:
          update_cache: yes
